@@ -9,7 +9,8 @@ RUN apk add --no-cache --virtual .ext-deps \
         nodejs-npm \
         nginx \
         git \
-        inkscape
+        inkscape \
+        libmemcached-dev
 
 # imagick
 RUN apk add --update --no-cache autoconf g++ imagemagick-dev libtool make pcre-dev \
@@ -32,6 +33,14 @@ RUN docker-php-ext-configure pdo_mysql && \
 
 RUN docker-php-ext-install pdo_mysql opcache exif gd zip && \
     docker-php-source delete
+
+# Install Memcached for php 7
+RUN curl -L -o /tmp/memcached.tar.gz "https://github.com/php-memcached-dev/php-memcached/archive/php7.tar.gz" \
+    && mkdir -p /usr/src/php/ext/memcached \
+    && tar -C /usr/src/php/ext/memcached -zxvf /tmp/memcached.tar.gz --strip 1 \
+    && docker-php-ext-configure memcached \
+    && docker-php-ext-install memcached \
+    && rm /tmp/memcached.tar.gz
 
 COPY default.conf /etc/nginx/conf.d/default.conf
 COPY entrypoint.sh /entrypoint.sh
